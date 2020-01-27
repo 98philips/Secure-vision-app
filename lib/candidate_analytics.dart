@@ -84,10 +84,7 @@ class CandidateState extends State<CandidateAnalytics> {
   }
 
   Widget topBar() {
-    return Hero(
-        tag: candidate.id,
-        child: SingleChildScrollView(
-          child: Container(
+    return Container(
             child: Row(
               children: <Widget>[
                 Container(
@@ -132,8 +129,7 @@ class CandidateState extends State<CandidateAnalytics> {
                 ),
               ],
             ),
-          ),
-        ));
+          );
   }
 
   Widget buildItem(List<ChartData> data) {

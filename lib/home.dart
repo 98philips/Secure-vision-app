@@ -145,10 +145,8 @@ class HomeState extends State<Home> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16.0),
         ),
-        child: Hero(
-          tag: candidate.id,
-          child: SingleChildScrollView(
-            child: Container(
+        child: 
+            Container(
               padding: EdgeInsets.all(8),
               child: Row(
                 children: <Widget>[
@@ -198,8 +196,6 @@ class HomeState extends State<Home> {
               ),
             ),
           ),
-        ),
-      ),
     );
   }
 }
