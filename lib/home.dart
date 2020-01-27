@@ -96,6 +96,7 @@ class HomeState extends State<Home> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_title),
+        centerTitle: true,
         // actions: <Widget>[
         //   IconButton(
         //     icon: Icon(Icons.menu),

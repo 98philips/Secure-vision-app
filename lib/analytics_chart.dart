@@ -47,7 +47,7 @@ class AnalyticsState extends State<AnalyticsChart>{
 
   Widget chartControls(){
     return Container(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
           child: Row(
             children: <Widget>[
               Expanded(
@@ -93,9 +93,7 @@ class AnalyticsState extends State<AnalyticsChart>{
 
   Widget chart(List<charts.Series<ChartData, String>> series){
     return Container(
-      padding: EdgeInsets.all(16),
-        child:Container(
-          height: 400,
+          height: 300,
           padding: EdgeInsets.all(16),
         child: charts.BarChart(
           series,
@@ -116,7 +114,6 @@ class AnalyticsState extends State<AnalyticsChart>{
             ),
           ),
         ),
-      ),
     );
   }
 }

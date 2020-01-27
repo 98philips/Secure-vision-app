@@ -61,14 +61,19 @@ class CandidateState extends State<CandidateAnalytics> {
   void initState() {
     super.initState();
     candidate = widget.candidate;
-    pageController = PageController(initialPage: widget.index);
+    pageController = PageController(
+      initialPage: widget.index,
+      viewportFraction: 0.95,
+      );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: topBar()),
-      body: PageView.builder(
+      body: SafeArea(
+        child:Container(
+          margin: EdgeInsets.fromLTRB(0, 8, 0, 8),
+        child:PageView.builder(
           controller: pageController,
           itemCount: widget.candidateList.length,
           onPageChanged: (int index) {
@@ -79,12 +84,21 @@ class CandidateState extends State<CandidateAnalytics> {
           physics: AlwaysScrollableScrollPhysics(),
           itemBuilder: (BuildContext context, int index) {
             return buildItem(data);
-          }),
-    );
+          })),
+    ));
   }
 
   Widget topBar() {
     return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(
+            width: 0.2,
+            color: Colors.greenAccent,
+          )
+        )
+      ),
+      padding: EdgeInsets.all(8),
             child: Row(
               children: <Widget>[
                 Container(
@@ -133,15 +147,21 @@ class CandidateState extends State<CandidateAnalytics> {
   }
 
   Widget buildItem(List<ChartData> data) {
-    return Container(
-        padding: EdgeInsets.all(8),
+    return Card(
+      color: Colors.black12,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16)
+      ),
+      child:Container(
+      padding: EdgeInsets.all(8),
         child: Column(children: <Widget>[
           AnalyticsChart(
             data: data,
           ),
           Spacer(
             flex: 1,
-          )
-        ]));
+          ),
+          topBar(),
+        ])));
   }
 }
