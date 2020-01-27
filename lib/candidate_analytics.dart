@@ -137,13 +137,15 @@ class CandidateState extends State<CandidateAnalytics> {
   }
 
   Widget buildItem(List<ChartData> data) {
-    return Column(
-      children: <Widget>[
-        AnalyticsChart(
-          data: data,
-        ),
-        Spacer(flex: 1),
-      ],
-    );
+    return Container(
+        padding: EdgeInsets.all(8),
+        child: Column(children: <Widget>[
+          AnalyticsChart(
+            data: data,
+          ),
+          Spacer(
+            flex: 1,
+          )
+        ]));
   }
 }
