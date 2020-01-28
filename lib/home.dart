@@ -95,14 +95,35 @@ class HomeState extends State<Home> {
     ];
     return Scaffold(
       appBar: AppBar(
-        title: Text(_title),
-        centerTitle: true,
-        // actions: <Widget>[
-        //   IconButton(
-        //     icon: Icon(Icons.menu),
-        //     onPressed: () {},
-        //   )
-        // ],
+        title:Row(
+          children: <Widget>[
+            Text(_title),
+            Spacer(flex: 1,),
+            GestureDetector(
+            onTap: (){
+              _settingModalBottomSheet(context);
+            },
+            child:Container(
+                    width: 35.0,
+                    height: 35.0,
+                    decoration: BoxDecoration(
+                      color: Colors.green,
+                      image: DecorationImage(
+                        image: new NetworkImage(candidateList.elementAt(0).imageUrl),
+                        fit: BoxFit.cover,
+                      ),
+                      borderRadius:
+                          new BorderRadius.all(new Radius.circular(50.0)),
+                      border: new Border.all(
+                        color: Colors.greenAccent,
+                        width: 1.0,
+                      ),
+                    ),
+                  ),),
+          ],
+        )
+         
+          
       ),
       body: Container(
         padding: EdgeInsets.all(8),
@@ -142,7 +163,12 @@ class HomeState extends State<Home> {
           MaterialPageRoute(
               builder: (context) =>
                   CandidateAnalytics(candidate, candidateList, index))),
-      child: Card(
+      child: _listItemTile(candidate),
+    );
+  }
+
+  Widget _listItemTile(Candidate candidate){
+    return Card(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16.0),
         ),
@@ -196,7 +222,74 @@ class HomeState extends State<Home> {
                 ],
               ),
             ),
-          ),
-    );
+          );
   }
+
+  Widget _profile(Candidate candidate){
+    return Container(
+              padding: EdgeInsets.all(8),
+              child: Row(
+                children: <Widget>[
+                  Container(
+                    width: 50.0,
+                    height: 50.0,
+                    decoration: BoxDecoration(
+                      color: Colors.green,
+                      image: DecorationImage(
+                        image: new NetworkImage(candidate.imageUrl),
+                        fit: BoxFit.cover,
+                      ),
+                      borderRadius:
+                          new BorderRadius.all(new Radius.circular(50.0)),
+                      border: new Border.all(
+                        color: Colors.greenAccent,
+                        width: 1.0,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Container(
+                      padding: EdgeInsets.only(left: 16),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            SingleChildScrollView(
+                              child: Container(
+                                padding: EdgeInsets.only(bottom: 4),
+                                child: Text(
+                                  candidate.name,
+                                ),
+                              ),
+                            ),
+                            SingleChildScrollView(
+                              child: Text(
+                                candidate.id,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.edit),
+                    onPressed: (){},
+                  )
+                ],
+              ),
+            );
+  }
+
+  void _settingModalBottomSheet(context){
+    showModalBottomSheet(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      context: context,
+      builder: (BuildContext bc){
+          return SafeArea(child:Wrap(children:<Widget>[_profile(candidateList.elementAt(0))]));
+      }
+    );
+}
 }

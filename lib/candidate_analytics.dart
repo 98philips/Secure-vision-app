@@ -63,7 +63,7 @@ class CandidateState extends State<CandidateAnalytics> {
     candidate = widget.candidate;
     pageController = PageController(
       initialPage: widget.index,
-      viewportFraction: 0.95,
+      viewportFraction: 0.92,
       );
   }
 
