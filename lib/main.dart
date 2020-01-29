@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'file:///Users/philippaul/dev/flutter_projects/vision/lib/home.dart';
+import 'package:vision/login.dart';
 
 void main() => runApp(MyApp());
 
@@ -14,7 +15,7 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.green,
           brightness: Brightness.dark
         ),
-        home: Home()
+        home: Login()
     );
   }
 }
