@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:vision/profileInfo.dart';
@@ -15,6 +16,7 @@ class Login extends StatefulWidget {
 class LoginState extends State<Login> {
   String username, password;
   ProfileInfo profileInfo;
+  bool loader;
 
   @override
   void initState() {
@@ -23,6 +25,7 @@ class LoginState extends State<Login> {
     username = "";
     password = "";
     profileInfo = null;
+    loader = false;
   }
 
 
@@ -94,6 +97,9 @@ class LoginState extends State<Login> {
                         borderRadius: BorderRadius.circular(40)),
                     child: FlatButton(
                       onPressed: () async{
+                        setState(() {
+                          loader = true;
+                        });
                         if (await _auth(username, password)) {
                           login();
                         }
@@ -107,7 +113,7 @@ class LoginState extends State<Login> {
                               style: TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold),
                             ),
-                            Icon(Icons.arrow_forward)
+                            decide(loader),
                           ],
                         ),
                       ),
@@ -121,6 +127,19 @@ class LoginState extends State<Login> {
         ),
       ),
     );
+  }
+
+  Widget decide(bool loader){
+    if(loader){
+      return Container(
+        height: 20,
+        width: 20,
+        margin: EdgeInsets.only(left: 4),
+        child:CircularProgressIndicator()
+        );
+    }else{
+      return Icon(Icons.arrow_forward);
+    }
   }
 
   Future<bool> _auth(String username, String password) async{
@@ -139,32 +158,49 @@ class LoginState extends State<Login> {
 
   Future<ProfileInfo> fetchPost(String username, String password) async {
     print(username);
-    final response = await http.post(
+    var response;
+    try{
+    response = await http.post(
         'http://secure.pythonanywhere.com/api/app_login/',
         body: {'username': username, 'password': password});
-
-
+    }catch(e){
+      Fluttertoast.showToast(
+          msg: 'Something went wrong!',
+          toastLength: Toast.LENGTH_SHORT,
+        );
+        setState(() {
+          loader = false;
+        });
+        return null;
+    }
+    setState(() {
+          loader = false;
+        });
     if (response.statusCode == 200) {
       Map<String, dynamic> responseBody = json.decode(response.body);
       print(responseBody.toString());
       print("Status: "+responseBody['status'].toString());
       if(responseBody['status']== 200){
-        final snackBar = SnackBar(content: Text('Successfully Logged in'));
-        Scaffold.of(context).showSnackBar(snackBar);
+        Fluttertoast.showToast(
+          msg: 'Successfully Logged in',
+          toastLength: Toast.LENGTH_SHORT,
+        );
         final prefs = await SharedPreferences.getInstance();
         prefs.setString('profile_info', responseBody['data']);
         return ProfileInfo.fromJson(responseBody['data']);
       }else{
-        final snackBar = SnackBar(content: Text('Invalid Username or Password'));
-        Scaffold.of(context).showSnackBar(snackBar);
+        Fluttertoast.showToast(
+          msg: 'Invalid Username or Password',
+          toastLength: Toast.LENGTH_SHORT,
+        );
       }
       // If server returns an OK response, parse the JSON.
       
     } else {
-      final snackBar = SnackBar(content: Text('Something went wrong!'));
-
-      Scaffold.of(context).showSnackBar(snackBar);
-
+      Fluttertoast.showToast(
+          msg: 'Something went wrong!',
+          toastLength: Toast.LENGTH_SHORT,
+        );
       // If that response was not OK, throw an error.
       print("error");
       // throw Exception('Failed to load post');
