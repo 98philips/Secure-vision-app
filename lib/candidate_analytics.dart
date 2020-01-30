@@ -157,6 +157,7 @@ class CandidateState extends State<CandidateAnalytics> {
         child: Column(children: <Widget>[
           AnalyticsChart(
             data: data,
+            yText: "Presence Count",
           ),
           Spacer(
             flex: 1,

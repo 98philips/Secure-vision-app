@@ -4,7 +4,8 @@ import 'package:charts_flutter/flutter.dart' as charts;
 
 class AnalyticsChart extends StatefulWidget {
   List<ChartData> data;
-  AnalyticsChart({@required this.data});
+  String yText;
+  AnalyticsChart({@required this.data,@required this.yText});
 @override
   State<StatefulWidget> createState() {
     return AnalyticsState();
@@ -20,6 +21,7 @@ class AnalyticsState extends State<AnalyticsChart>{
     super.initState();
     interval = "Last Week";
     cam = "All Cameras";
+    print(widget.yText);
   }
 
   @override
@@ -39,6 +41,10 @@ class AnalyticsState extends State<AnalyticsChart>{
       child:Column(
       children: <Widget>[
         chartControls(),
+        Container(
+
+          child: Text(widget.yText),
+        ),
         chart(series),
       ],
     ),
@@ -47,8 +53,9 @@ class AnalyticsState extends State<AnalyticsChart>{
 
   Widget chartControls(){
     return Container(
-          padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
-          child: Row(
+          padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Column(children:<Widget>[
+            Row(
             children: <Widget>[
               Expanded(
                 child:Container(
@@ -88,6 +95,7 @@ class AnalyticsState extends State<AnalyticsChart>{
               ),),)
             ],
           ),
+          ]),
         );
   }
 

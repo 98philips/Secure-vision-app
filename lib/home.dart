@@ -5,11 +5,9 @@ import 'package:vision/candidate_analytics.dart';
 import 'package:vision/candidate_class.dart';
 import 'package:vision/chart_data.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
-import 'package:vision/login.dart';
 import 'package:vision/profileInfo.dart';
 
 class Home extends StatefulWidget {
-  
   @override
   State<StatefulWidget> createState() {
     // TODO: implement createState
@@ -26,9 +24,11 @@ class HomeState extends State<Home> {
         "https://www.evolutionsociety.org/userdata/news_picupload/pic_sid189-0-norm.jpg"),
     Candidate("Rahul Mohan K", "rahulmohan1999@gmail.com",
         "https://www.evolutionsociety.org/userdata/news_picupload/pic_sid189-0-norm.jpg"),
-        Candidate("Nair Atul", "atulnair2202@gmail.com",
+    Candidate("Nair Atul", "atulnair2202@gmail.com",
         "https://www.evolutionsociety.org/userdata/news_picupload/pic_sid189-0-norm.jpg")
   ];
+  List<Candidate> oldCandidateList = [];
+  bool showSearchButton=false,showSearchBar=false;
   final List<ChartData> data = [
     ChartData(
       x: "Sun",
@@ -68,7 +68,7 @@ class HomeState extends State<Home> {
   ];
   List<Widget> _widgetOptions;
   String _title;
-  List<String> _titleList = ["Overall Analytics","Candidate Analytics"];
+  List<String> _titleList = ["Overall Analytics", "Candidate Analytics"];
   ProfileInfo profileInfo;
 
   @override
@@ -76,6 +76,9 @@ class HomeState extends State<Home> {
     super.initState();
     _selectedIndex = 0;
     _title = _titleList.elementAt(_selectedIndex);
+    oldCandidateList = candidateList;
+    showSearchBar = false;
+    showSearchButton = false;
     _getPref();
   }
 
@@ -86,52 +89,52 @@ class HomeState extends State<Home> {
         children: <Widget>[
           AnalyticsChart(
             data: data,
+            yText: "No. of people",
           ),
           Spacer(
             flex: 1,
           )
         ],
       ),
-      ListView.builder(
-        scrollDirection: Axis.vertical,
-        itemCount: candidateList.length,
-        itemBuilder: (BuildContext context, int index) {
-          return candidateTile(candidateList.elementAt(index), context, index);
-        },
-      ),
+          ListView.builder(
+            scrollDirection: Axis.vertical,
+            itemCount: candidateList.length,
+            itemBuilder: (BuildContext context, int index) {
+              return candidateTile(
+                  candidateList.elementAt(index), context, index);
+            },
+          ),
     ];
     return Scaffold(
       appBar: AppBar(
-        title:Row(
-          children: <Widget>[
-            Text(_title),
-            Spacer(flex: 1,),
-            GestureDetector(
-            onTap: (){
+          title: Row(
+        children: <Widget>[
+          getSearchBar(showSearchBar),
+          getSearchButton(showSearchButton),
+          GestureDetector(
+            onTap: () {
               _settingModalBottomSheet(context);
             },
-            child:Container(
-                    width: 35.0,
-                    height: 35.0,
-                    decoration: BoxDecoration(
-                      color: Colors.green,
-                      image: DecorationImage(
-                        image: new NetworkImage("http://secure.pythonanywhere.com/"+profileInfo.imageUrl),
-                        fit: BoxFit.cover,
-                      ),
-                      borderRadius:
-                          new BorderRadius.all(new Radius.circular(50.0)),
-                      border: new Border.all(
-                        color: Colors.greenAccent,
-                        width: 1.0,
-                      ),
-                    ),
-                  ),),
-          ],
-        )
-         
-          
-      ),
+            child: Container(
+              width: 30.0,
+              height: 30.0,
+              decoration: BoxDecoration(
+                color: Colors.green,
+                image: DecorationImage(
+                  image: new NetworkImage("http://secure.pythonanywhere.com/" +
+                      profileInfo.imageUrl),
+                  fit: BoxFit.cover,
+                ),
+                borderRadius: new BorderRadius.all(new Radius.circular(50.0)),
+                border: new Border.all(
+                  color: Colors.greenAccent,
+                  width: 1.0,
+                ),
+              ),
+            ),
+          ),
+        ],
+      )),
       body: Container(
         padding: EdgeInsets.all(8),
         child: _widgetOptions.elementAt(_selectedIndex),
@@ -152,6 +155,11 @@ class HomeState extends State<Home> {
           setState(() {
             _selectedIndex = index;
             _title = _titleList.elementAt(_selectedIndex);
+            showSearchButton = !showSearchButton;
+            if(index == 0){
+              showSearchBar = false;
+            }
+            candidateList = oldCandidateList;
           });
         },
       ),
@@ -162,6 +170,42 @@ class HomeState extends State<Home> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
+
+  Widget getSearchButton(bool flag){
+    if(flag){
+      return Container(
+            margin: EdgeInsets.only(right: 8),
+            child: IconButton(
+              onPressed: () {
+                setState(() {
+                  showSearchBar = !showSearchBar;
+                  candidateList = oldCandidateList;
+                });
+              },
+              icon: showSearchBar ? Icon(Icons.close) : Icon(Icons.search)
+            ),
+          );
+    }
+    return Container();
+  }
+
+  Widget getSearchBar(bool flag){
+    if(flag){
+      return Expanded(child:Container(
+            margin: EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: TextField(
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: "Search",
+              ),
+              onChanged: (String text)=>search(text),
+            )
+          ),);
+    }
+    return Expanded(child:Text(_title));
+  }
+
+
 
   Widget candidateTile(Candidate candidate, BuildContext context, int index) {
     return GestureDetector(
@@ -174,159 +218,180 @@ class HomeState extends State<Home> {
     );
   }
 
-  Widget _listItemTile(Candidate candidate){
+  void search(String key) {
+    key = key.toLowerCase();
+    List<Candidate> searchList = [];
+    oldCandidateList.forEach((Candidate c) {
+      if (c.name.toLowerCase().contains(key)) {
+        searchList.add(c);
+      }
+    });
+    if (key == "") {
+      searchList = oldCandidateList;
+    }
+    setState(() {
+      candidateList = searchList;
+    });
+  }
+
+  Widget _listItemTile(Candidate candidate) {
     return Card(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.0),
-        ),
-        child: 
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.0),
+      ),
+      child: Container(
+        padding: EdgeInsets.all(8),
+        child: Row(
+          children: <Widget>[
             Container(
-              padding: EdgeInsets.all(8),
-              child: Row(
-                children: <Widget>[
-                  Container(
-                    width: 50.0,
-                    height: 50.0,
-                    decoration: BoxDecoration(
-                      color: Colors.green,
-                      image: DecorationImage(
-                        image: new NetworkImage(candidate.imageUrl),
-                        fit: BoxFit.cover,
-                      ),
-                      borderRadius:
-                          new BorderRadius.all(new Radius.circular(50.0)),
-                      border: new Border.all(
-                        color: Colors.greenAccent,
-                        width: 1.0,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Container(
-                      padding: EdgeInsets.only(left: 16),
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            SingleChildScrollView(
-                              child: Container(
-                                padding: EdgeInsets.only(bottom: 4),
-                                child: Text(
-                                  candidate.name,
-                                ),
-                              ),
-                            ),
-                            SingleChildScrollView(
-                              child: Text(
-                                candidate.id,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  )
-                ],
+              width: 50.0,
+              height: 50.0,
+              decoration: BoxDecoration(
+                color: Colors.green,
+                image: DecorationImage(
+                  image: new NetworkImage(candidate.imageUrl),
+                  fit: BoxFit.cover,
+                ),
+                borderRadius: new BorderRadius.all(new Radius.circular(50.0)),
+                border: new Border.all(
+                  color: Colors.greenAccent,
+                  width: 1.0,
+                ),
               ),
             ),
-          );
-  }
-
-  Widget _profile(){
-    return Container(
-              padding: EdgeInsets.all(8),
-              child: Row(
-                children: <Widget>[
-                  Container(
-                    width: 50.0,
-                    height: 50.0,
-                    decoration: BoxDecoration(
-                      color: Colors.green,
-                      image: DecorationImage(
-                        image: new NetworkImage("http://secure.pythonanywhere.com/"+profileInfo.imageUrl),
-                        fit: BoxFit.cover,
-                      ),
-                      borderRadius:
-                          new BorderRadius.all(new Radius.circular(50.0)),
-                      border: new Border.all(
-                        color: Colors.greenAccent,
-                        width: 1.0,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Container(
-                      padding: EdgeInsets.only(left: 16),
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            SingleChildScrollView(
-                              child: Container(
-                                padding: EdgeInsets.only(bottom: 4),
-                                child: Text(
-                                  profileInfo.name,
-                                ),
-                              ),
-                            ),
-                            SingleChildScrollView(
-                              child: Text(
-                                profileInfo.email,
-                              ),
-                            ),
-                          ],
+            Expanded(
+              child: Container(
+                padding: EdgeInsets.only(left: 16),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      SingleChildScrollView(
+                        child: Container(
+                          padding: EdgeInsets.only(bottom: 4),
+                          child: Text(
+                            candidate.name,
+                          ),
                         ),
                       ),
-                    ),
+                      SingleChildScrollView(
+                        child: Text(
+                          candidate.id,
+                        ),
+                      ),
+                    ],
                   ),
-                  IconButton(
-                    icon: Icon(Icons.exit_to_app),
-                    onPressed: (){
-                      _clearData();
-                      logout(); 
-                    },
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.edit),
-                    onPressed: (){},
-                  )
-                ],
+                ),
               ),
-            );
+            )
+          ],
+        ),
+      ),
+    );
   }
 
-  void _clearData() async{
+  Widget _profile() {
+    return Container(
+      padding: EdgeInsets.all(8),
+      child: Row(
+        children: <Widget>[
+          Container(
+            width: 50.0,
+            height: 50.0,
+            decoration: BoxDecoration(
+              color: Colors.green,
+              image: DecorationImage(
+                image: new NetworkImage(
+                    "http://secure.pythonanywhere.com/" + profileInfo.imageUrl),
+                fit: BoxFit.cover,
+              ),
+              borderRadius: new BorderRadius.all(new Radius.circular(50.0)),
+              border: new Border.all(
+                color: Colors.greenAccent,
+                width: 1.0,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Container(
+              padding: EdgeInsets.only(left: 16),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    SingleChildScrollView(
+                      child: Container(
+                        padding: EdgeInsets.only(bottom: 4),
+                        child: Row(children: <Widget>[
+                          Text(
+                            profileInfo.name,
+                          ),
+                          Text(
+                            '.' + profileInfo.username,
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ]),
+                      ),
+                    ),
+                    SingleChildScrollView(
+                      child: Text(
+                        profileInfo.email,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.exit_to_app),
+            onPressed: () {
+              _clearData();
+              logout();
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.edit),
+            onPressed: () {},
+          )
+        ],
+      ),
+    );
+  }
+
+  void _clearData() async {
     final prefs = await SharedPreferences.getInstance();
     prefs.clear();
   }
 
-  void _getPref() async{
+  void _getPref() async {
     final prefs = await SharedPreferences.getInstance();
     String responseString = prefs.getString('profile_info');
-    if(responseString==null){
+    if (responseString == null) {
       logout();
     }
     setState(() {
       profileInfo = ProfileInfo.fromJson(responseString);
     });
-    print("name object: "+profileInfo.username);
-    
+    print("name object: " + profileInfo.username);
   }
 
-  void logout(){
+  void logout() {
     Navigator.pop(context);
     Navigator.pushReplacementNamed(context, '/login');
   }
 
-  void _settingModalBottomSheet(context){
+  void _settingModalBottomSheet(context) {
     showModalBottomSheet(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      context: context,
-      builder: (BuildContext bc){
-          return SafeArea(child:Wrap(children:<Widget>[_profile()]));
-      }
-    );
-}
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        context: context,
+        builder: (BuildContext bc) {
+          return SafeArea(child: Wrap(children: <Widget>[_profile()]));
+        });
+  }
 }
