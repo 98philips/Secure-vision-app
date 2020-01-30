@@ -8,7 +8,6 @@ void main() => runApp(MyApp());
 class MyApp extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
-    // TODO: implement createState
     return MyAppState();
   }
 }
@@ -16,11 +15,9 @@ class MyApp extends StatefulWidget {
 class MyAppState extends State<MyApp>{
   final List<Widget> screen = [Home(),Login()];
   int pos = 0;
-  // This widget is the root of your application.
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _checkLogin();
   }

@@ -6,6 +6,7 @@ import 'package:vision/candidate_class.dart';
 import 'package:vision/chart_data.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:vision/profileInfo.dart';
+import 'package:vision/profile_sheet.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -290,82 +291,9 @@ class HomeState extends State<Home> {
     );
   }
 
-  Widget _profile() {
-    return Container(
-      padding: EdgeInsets.all(8),
-      child: Row(
-        children: <Widget>[
-          Container(
-            width: 50.0,
-            height: 50.0,
-            decoration: BoxDecoration(
-              color: Colors.green,
-              image: DecorationImage(
-                image: new NetworkImage(
-                    "http://secure.pythonanywhere.com/" + profileInfo.imageUrl),
-                fit: BoxFit.cover,
-              ),
-              borderRadius: new BorderRadius.all(new Radius.circular(50.0)),
-              border: new Border.all(
-                color: Colors.greenAccent,
-                width: 1.0,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Container(
-              padding: EdgeInsets.only(left: 16),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    SingleChildScrollView(
-                      child: Container(
-                        padding: EdgeInsets.only(bottom: 4),
-                        child: Row(children: <Widget>[
-                          Text(
-                            profileInfo.name,
-                          ),
-                          Text(
-                            '.' + profileInfo.username,
-                            style: TextStyle(
-                              color: Colors.grey,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ]),
-                      ),
-                    ),
-                    SingleChildScrollView(
-                      child: Text(
-                        profileInfo.email,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          IconButton(
-            icon: Icon(Icons.exit_to_app),
-            onPressed: () {
-              _clearData();
-              logout();
-            },
-          ),
-          IconButton(
-            icon: Icon(Icons.edit),
-            onPressed: () {},
-          )
-        ],
-      ),
-    );
-  }
+  
 
-  void _clearData() async {
-    final prefs = await SharedPreferences.getInstance();
-    prefs.clear();
-  }
+  
 
   void _getPref() async {
     final prefs = await SharedPreferences.getInstance();
@@ -383,15 +311,17 @@ class HomeState extends State<Home> {
     Navigator.pop(context);
     Navigator.pushReplacementNamed(context, '/login');
   }
-
   void _settingModalBottomSheet(context) {
     showModalBottomSheet(
+      isScrollControlled: true,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
         context: context,
         builder: (BuildContext bc) {
-          return SafeArea(child: Wrap(children: <Widget>[_profile()]));
+          return SafeArea(child: ProfileSheet(profileInfo: profileInfo));
         });
   }
+
+  
 }
