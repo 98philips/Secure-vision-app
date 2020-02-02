@@ -64,105 +64,134 @@ class CandidateState extends State<CandidateAnalytics> {
     pageController = PageController(
       initialPage: widget.index,
       viewportFraction: 0.92,
-      );
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child:Container(
+        body: SafeArea(
+      child: Container(
           margin: EdgeInsets.fromLTRB(0, 8, 0, 8),
-        child:PageView.builder(
-          controller: pageController,
-          itemCount: widget.candidateList.length,
-          onPageChanged: (int index) {
-            setState(() {
-              candidate = widget.candidateList.elementAt(index);
-            });
-          },
-          physics: AlwaysScrollableScrollPhysics(),
-          itemBuilder: (BuildContext context, int index) {
-            return buildItem(data);
-          })),
+          child: PageView.builder(
+              controller: pageController,
+              itemCount: widget.candidateList.length,
+              onPageChanged: (int index) {
+                setState(() {
+                  candidate = widget.candidateList.elementAt(index);
+                });
+              },
+              physics: AlwaysScrollableScrollPhysics(),
+              itemBuilder: (BuildContext context, int index) {
+                return buildItem(data);
+              })),
     ));
   }
 
   Widget topBar() {
     return Container(
       decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(
-            width: 0.2,
-            color: Colors.greenAccent,
-          )
-        )
-      ),
+          border: Border(
+              top: BorderSide(
+        width: 0.2,
+        color: Colors.greenAccent,
+      ))),
       padding: EdgeInsets.all(8),
-            child: Row(
-              children: <Widget>[
-                Container(
-                  width: 40.0,
-                  height: 40.0,
-                  decoration: BoxDecoration(
-                    color: Colors.green,
-                    image: DecorationImage(
-                      image: new NetworkImage(candidate.imageUrl),
-                      fit: BoxFit.cover,
-                    ),
-                    borderRadius:
-                        new BorderRadius.all(new Radius.circular(50.0)),
-                    border: new Border.all(
-                      color: Colors.greenAccent,
-                      width: 1.0,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.only(left: 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        SingleChildScrollView(
-                          child: Container(
-                            padding: EdgeInsets.only(bottom: 4),
-                            child: Text(candidate.name,
-                                style: TextStyle(fontSize: 16)),
-                          ),
-                        ),
-                        SingleChildScrollView(
-                          child: Text(
-                            candidate.id,
-                            style: TextStyle(fontSize: 16),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+      child: Row(
+        children: <Widget>[
+          Container(
+            width: 40.0,
+            height: 40.0,
+            decoration: BoxDecoration(
+              color: Colors.green,
+              image: DecorationImage(
+                image: new NetworkImage(candidate.imageUrl),
+                fit: BoxFit.cover,
+              ),
+              borderRadius: new BorderRadius.all(new Radius.circular(50.0)),
+              border: new Border.all(
+                color: Colors.greenAccent,
+                width: 1.0,
+              ),
             ),
-          );
+          ),
+          Expanded(
+            child: Container(
+              padding: EdgeInsets.only(left: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  SingleChildScrollView(
+                    child: Container(
+                      padding: EdgeInsets.only(bottom: 4),
+                      child:
+                          Text(candidate.name, style: TextStyle(fontSize: 16)),
+                    ),
+                  ),
+                  SingleChildScrollView(
+                    child: Text(
+                      candidate.id,
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget buildItem(List<ChartData> data) {
     return Card(
-      color: Colors.black12,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16)
+        color: Colors.black12,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+            margin: EdgeInsets.all(16),
+            child: Column(children: <Widget>[
+              AnalyticsChart(
+                data: data,
+                yText: "Presence Count",
+              ),
+              Expanded(
+                child: Card(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  child: ListView.builder(
+                    scrollDirection: Axis.vertical,
+                    itemCount: 15,
+                    itemBuilder: (BuildContext context, int index) {
+                      return _listItemTile();
+                    },
+                  ),
+                ),
+              ),
+              topBar(),
+            ])));
+  }
+
+  Widget _listItemTile() {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+          border: Border(
+              bottom: BorderSide(
+        width: 0.2,
+        color: Colors.greenAccent,
+      ))),
+      child: Row(
+        children: <Widget>[
+          Container(
+            child: Text(
+              "Friday",
+            ),
+          ),
+          Spacer(),
+          Text(
+            "13:15",
+          ),
+        ],
       ),
-      child:Container(
-      padding: EdgeInsets.all(8),
-        child: Column(children: <Widget>[
-          AnalyticsChart(
-            data: data,
-            yText: "Presence Count",
-          ),
-          Spacer(
-            flex: 1,
-          ),
-          topBar(),
-        ])));
+    );
   }
 }
