@@ -155,7 +155,9 @@ class CandidateState extends State<CandidateAnalytics> {
                 yText: "Presence Count",
               ),
               Expanded(
-                child: Card(
+                child: Container(
+                  margin: EdgeInsets.only(top: 16),
+                child:Card(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   child: ListView.builder(
                     scrollDirection: Axis.vertical,
@@ -165,14 +167,15 @@ class CandidateState extends State<CandidateAnalytics> {
                     },
                   ),
                 ),
-              ),
+              ),),
               topBar(),
             ])));
   }
 
   Widget _listItemTile() {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(8),
+      margin: EdgeInsets.all(8),
       decoration: BoxDecoration(
           border: Border(
               bottom: BorderSide(
