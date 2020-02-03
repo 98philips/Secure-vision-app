@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'package:vision/main.dart';
 import 'package:vision/profileInfo.dart';
 import 'dart:convert' show json;
 
@@ -100,6 +101,7 @@ class LoginState extends State<Login> {
                         setState(() {
                           loader = true;
                         });
+                        print(MyApp.getURL()+'api/app_login/');
                         if (await _auth(username, password)) {
                           login();
                         }
@@ -161,13 +163,14 @@ class LoginState extends State<Login> {
     var response;
     try{
     response = await http.post(
-        'http://secure.pythonanywhere.com/api/app_login/',
+        MyApp.getURL() +'/api/app_login/',
         body: {'username': username, 'password': password});
     }catch(e){
       Fluttertoast.showToast(
           msg: 'Something went wrong!',
           toastLength: Toast.LENGTH_SHORT,
         );
+        print(e.toString());
         setState(() {
           loader = false;
         });

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vision/main.dart';
 import 'package:vision/profileInfo.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -115,7 +116,7 @@ class ProfileSheetState extends State<ProfileSheet> {
                     color: Colors.green,
                     image: DecorationImage(
                       image: new NetworkImage(
-                          "http://secure.pythonanywhere.com/" +
+                          MyApp.getURL() +
                               widget.profileInfo.imageUrl),
                       fit: BoxFit.cover,
                     ),
@@ -163,7 +164,7 @@ class ProfileSheetState extends State<ProfileSheet> {
           Container(
             margin: EdgeInsets.only(bottom: 16),
             child: TextFormField(
-              initialValue: "8281742377",
+              initialValue: widget.profileInfo.phNo,
               decoration: InputDecoration(
                   labelText: "Moble Number",
                   border: OutlineInputBorder(
@@ -218,7 +219,7 @@ class ProfileSheetState extends State<ProfileSheet> {
             decoration: BoxDecoration(
               color: Colors.green,
               image: DecorationImage(
-                image: new NetworkImage("http://secure.pythonanywhere.com/" +
+                image: new NetworkImage(MyApp.getURL() +
                     widget.profileInfo.imageUrl),
                 fit: BoxFit.cover,
               ),

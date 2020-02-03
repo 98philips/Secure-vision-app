@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vision/analytics_chart.dart';
 import 'package:vision/candidate_analytics.dart';
 import 'package:vision/candidate_class.dart';
 import 'package:vision/chart_data.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
+import 'package:vision/main.dart';
 import 'package:vision/profileInfo.dart';
 import 'package:vision/profile_sheet.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert' show json;
 
 class Home extends StatefulWidget {
   @override
@@ -18,16 +22,7 @@ class Home extends StatefulWidget {
 
 class HomeState extends State<Home> {
   int _selectedIndex;
-  List<Candidate> candidateList = [
-    Candidate("Philip Paul", "98philips@gmail.com",
-        "https://www.evolutionsociety.org/userdata/news_picupload/pic_sid189-0-norm.jpg"),
-    Candidate("Sreeraj S", "sreerajavk@gmail.com",
-        "https://www.evolutionsociety.org/userdata/news_picupload/pic_sid189-0-norm.jpg"),
-    Candidate("Rahul Mohan K", "rahulmohan1999@gmail.com",
-        "https://www.evolutionsociety.org/userdata/news_picupload/pic_sid189-0-norm.jpg"),
-    Candidate("Nair Atul", "atulnair2202@gmail.com",
-        "https://www.evolutionsociety.org/userdata/news_picupload/pic_sid189-0-norm.jpg")
-  ];
+  List<Candidate> candidateList ;
   List<Candidate> oldCandidateList = [];
   bool showSearchButton=false,showSearchBar=false;
   final List<ChartData> data = [
@@ -77,10 +72,69 @@ class HomeState extends State<Home> {
     super.initState();
     _selectedIndex = 0;
     _title = _titleList.elementAt(_selectedIndex);
-    oldCandidateList = candidateList;
     showSearchBar = false;
     showSearchButton = false;
+    candidateList = [];
     _getPref();
+  }
+
+  void _getData() async{
+    print("ORGID:"+profileInfo.orgId.toString());
+    try{
+    var response = await http.post(
+        MyApp.getURL() +'/api/get_candidates/',
+        body: {'org_id': profileInfo.orgId.toString()});
+        print(response.body);
+        if(response.statusCode == 200){
+          prepareData(response.body);
+        }else{
+          Fluttertoast.showToast(
+            msg: 'Invalid Username or Password',
+            toastLength: Toast.LENGTH_SHORT,
+          );
+        }
+    }catch(e){
+      Fluttertoast.showToast(
+          msg: 'Something went wrong!',
+          toastLength: Toast.LENGTH_SHORT,
+        );
+        print(e.toString());
+    }
+
+  }
+
+  void prepareData(String responseString){
+      Map<String, dynamic> responseBody = json.decode(responseString);
+      print(responseBody.toString());
+      print("Status: "+responseBody['status'].toString());
+      if(responseBody['status']== 200){
+        Fluttertoast.showToast(
+          msg: 'Success',
+          toastLength: Toast.LENGTH_SHORT,
+        );
+        List<dynamic> l = responseBody['data'];
+        for(dynamic i in l){
+          setState(() {
+            candidateList.add(Candidate.fromJson(i));
+          });
+
+        }
+        oldCandidateList = candidateList;
+        print(candidateList[0].email);
+
+
+      // If server returns an OK response, parse the JSON.
+
+    } else {
+      Fluttertoast.showToast(
+        msg: 'Something went wrong!',
+        toastLength: Toast.LENGTH_SHORT,
+      );
+      // If that response was not OK, throw an error.
+      print("error");
+      // throw Exception('Failed to load post');
+    }
+
   }
 
   @override
@@ -122,7 +176,7 @@ class HomeState extends State<Home> {
               decoration: BoxDecoration(
                 color: Colors.green,
                 image: DecorationImage(
-                  image: new NetworkImage("http://secure.pythonanywhere.com/" +
+                  image: new NetworkImage(MyApp.getURL() +
                       profileInfo.imageUrl),
                   fit: BoxFit.cover,
                 ),
@@ -250,7 +304,7 @@ class HomeState extends State<Home> {
               decoration: BoxDecoration(
                 color: Colors.green,
                 image: DecorationImage(
-                  image: new NetworkImage(candidate.imageUrl),
+                  image: new NetworkImage(MyApp.getURL()+candidate.imageUrl),
                   fit: BoxFit.cover,
                 ),
                 borderRadius: new BorderRadius.all(new Radius.circular(50.0)),
@@ -277,7 +331,7 @@ class HomeState extends State<Home> {
                       ),
                       SingleChildScrollView(
                         child: Text(
-                          candidate.id,
+                          candidate.email,
                         ),
                       ),
                     ],
@@ -305,6 +359,7 @@ class HomeState extends State<Home> {
       profileInfo = ProfileInfo.fromJson(responseString);
     });
     print("name object: " + profileInfo.username);
+    _getData();
   }
 
   void logout() {

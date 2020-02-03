@@ -3,6 +3,7 @@ import 'package:vision/analytics_chart.dart';
 import 'package:vision/candidate_class.dart';
 import 'package:vision/chart_data.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
+import 'package:vision/main.dart';
 
 class CandidateAnalytics extends StatefulWidget {
   final Candidate candidate;
@@ -65,7 +66,9 @@ class CandidateState extends State<CandidateAnalytics> {
       initialPage: widget.index,
       viewportFraction: 0.92,
     );
+
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -105,7 +108,7 @@ class CandidateState extends State<CandidateAnalytics> {
             decoration: BoxDecoration(
               color: Colors.green,
               image: DecorationImage(
-                image: new NetworkImage(candidate.imageUrl),
+                image: new NetworkImage(MyApp.getURL()+candidate.imageUrl),
                 fit: BoxFit.cover,
               ),
               borderRadius: new BorderRadius.all(new Radius.circular(50.0)),
@@ -130,7 +133,7 @@ class CandidateState extends State<CandidateAnalytics> {
                   ),
                   SingleChildScrollView(
                     child: Text(
-                      candidate.id,
+                      candidate.email,
                       style: TextStyle(fontSize: 16),
                     ),
                   ),
