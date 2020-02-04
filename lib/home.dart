@@ -246,13 +246,14 @@ class HomeState extends State<Home> {
 
   Widget getSearchBar(bool flag){
     if(flag){
-      return Expanded(child:Container(
+      return Expanded(
+        child:Container(
             margin: EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: TextField(
               autofocus: true,
-              decoration: InputDecoration(
-                labelText: "Search",
-              ),
+              decoration: InputDecoration.collapsed(
+                hintText: 'Search'
+            ),
               onChanged: (String text)=>search(text),
             )
           ),);
@@ -345,9 +346,9 @@ class HomeState extends State<Home> {
     );
   }
 
-  
 
-  
+
+
 
   void _getPref() async {
     final prefs = await SharedPreferences.getInstance();
@@ -378,5 +379,5 @@ class HomeState extends State<Home> {
         });
   }
 
-  
+
 }

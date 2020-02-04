@@ -103,7 +103,7 @@ class AnalyticsState extends State<AnalyticsChart>{
     return Container(
           height: 300,
           padding: EdgeInsets.all(16),
-        child: charts.BarChart(
+        child: charts.BarChart (
           series,
           animate: true,
           defaultRenderer: new charts.BarRendererConfig(
