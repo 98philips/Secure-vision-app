@@ -145,6 +145,7 @@ class HomeState extends State<Home> {
           AnalyticsChart(
             data: data,
             yText: "No. of people",
+            viewPortNo: 7,
           ),
           Spacer(
             flex: 1,

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:vision/analytics_chart.dart';
 import 'package:vision/candidate_class.dart';
 import 'package:vision/chart_data.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
+import 'package:http/http.dart' as http;
 import 'package:vision/main.dart';
+import 'dart:convert' show json;
 
 class CandidateAnalytics extends StatefulWidget {
   final Candidate candidate;
@@ -18,54 +21,20 @@ class CandidateAnalytics extends StatefulWidget {
 }
 
 class CandidateState extends State<CandidateAnalytics> {
-  final List<ChartData> data = [
-    ChartData(
-      x: "Sun",
-      y: 2,
-      barColor: charts.ColorUtil.fromDartColor(Colors.green),
-    ),
-    ChartData(
-      x: "Mon",
-      y: 6,
-      barColor: charts.ColorUtil.fromDartColor(Colors.green),
-    ),
-    ChartData(
-      x: "Tue",
-      y: 10,
-      barColor: charts.ColorUtil.fromDartColor(Colors.green),
-    ),
-    ChartData(
-      x: "Wed",
-      y: 7,
-      barColor: charts.ColorUtil.fromDartColor(Colors.green),
-    ),
-    ChartData(
-      x: "Thu",
-      y: 8,
-      barColor: charts.ColorUtil.fromDartColor(Colors.green),
-    ),
-    ChartData(
-      x: "Fri",
-      y: 12,
-      barColor: charts.ColorUtil.fromDartColor(Colors.green),
-    ),
-    ChartData(
-      x: "Sat",
-      y: 5,
-      barColor: charts.ColorUtil.fromDartColor(Colors.green),
-    ),
-  ];
+  List<ChartData> data;
   PageController pageController;
   Candidate candidate;
 
   @override
   void initState() {
     super.initState();
+    data = [];
     candidate = widget.candidate;
     pageController = PageController(
       initialPage: widget.index,
       viewportFraction: 0.92,
     );
+    fetchAnalytics();
 
   }
 
@@ -83,12 +52,60 @@ class CandidateState extends State<CandidateAnalytics> {
                 setState(() {
                   candidate = widget.candidateList.elementAt(index);
                 });
+                fetchAnalytics();
               },
               physics: AlwaysScrollableScrollPhysics(),
               itemBuilder: (BuildContext context, int index) {
                 return buildItem(data);
               })),
+
     ));
+  }
+
+  void fetchAnalytics() async{
+    var response;
+    print("email: "+candidate.email);
+    try{
+      response = await http.post(
+          MyApp.getURL() +'/api/get_user_analytics/',
+          body: {'email': candidate.email});
+      if (response.statusCode == 200) {
+        Map<String, dynamic> responseBody = json.decode(response.body);
+        print(responseBody.toString());
+        print("Status: "+responseBody['status'].toString());
+        if(responseBody['status']== 200){
+          List<dynamic> labels = responseBody['data'][0];
+          List<dynamic> values = responseBody['data'][1];
+          setData(labels, values);
+        }else{
+          Fluttertoast.showToast(
+            msg: 'Something went wrong please check your network connection.',
+            toastLength: Toast.LENGTH_SHORT,
+          );
+        }
+      }
+    }catch(e){
+      Fluttertoast.showToast(
+        msg: 'Something went wrong!',
+        toastLength: Toast.LENGTH_SHORT,
+      );
+      print(e.toString());
+    }
+  }
+
+  void setData(List<dynamic> labels,List<dynamic> values){
+    List<ChartData> newData =[];
+    for( int i = 0 ; i < labels.length ; i++ ){
+      ChartData chd = ChartData(
+        x: labels.elementAt(i).toString(),
+        y: values.elementAt(i),
+        barColor: charts.ColorUtil.fromDartColor(Colors.green),
+      );
+      newData.add(chd);
+    }
+    setState(() {
+      data = newData;
+    });
   }
 
   Widget topBar() {
@@ -156,6 +173,7 @@ class CandidateState extends State<CandidateAnalytics> {
               AnalyticsChart(
                 data: data,
                 yText: "Presence Count",
+                viewPortNo: 7,
               ),
               Expanded(
                 child: Container(

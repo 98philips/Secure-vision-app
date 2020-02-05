@@ -5,7 +5,8 @@ import 'package:charts_flutter/flutter.dart' as charts;
 class AnalyticsChart extends StatefulWidget {
   List<ChartData> data;
   String yText;
-  AnalyticsChart({@required this.data,@required this.yText});
+  int viewPortNo;
+  AnalyticsChart({@required this.data,@required this.yText, @required this.viewPortNo});
 @override
   State<StatefulWidget> createState() {
     return AnalyticsState();
@@ -114,6 +115,7 @@ class AnalyticsState extends State<AnalyticsChart>{
               labelStyle:
                   new charts.TextStyleSpec(color: charts.MaterialPalette.white),
             ),
+            viewport: charts.OrdinalViewport('viewPort',widget.viewPortNo),
           ),
           primaryMeasureAxis: new charts.NumericAxisSpec(
             renderSpec: new charts.GridlineRendererSpec(
@@ -121,6 +123,10 @@ class AnalyticsState extends State<AnalyticsChart>{
                   new charts.TextStyleSpec(color: charts.MaterialPalette.white),
             ),
           ),
+          behaviors: [
+            charts.SlidingViewport(),
+            charts.PanAndZoomBehavior(),
+          ],
         ),
     );
   }
