@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:vision/chart_data.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
+import 'package:http/http.dart' as http;
+import 'dart:convert' show json;
+
+import 'package:vision/main.dart';
 
 class AnalyticsChart extends StatefulWidget {
   List<ChartData> data;
-  String yText;
+  String yText,email;
   int viewPortNo;
-  AnalyticsChart({@required this.data,@required this.yText, @required this.viewPortNo});
+  AnalyticsChart({@required this.data,@required this.yText, @required this.viewPortNo, @required this.email});
 @override
   State<StatefulWidget> createState() {
     return AnalyticsState();
@@ -20,9 +25,10 @@ class AnalyticsState extends State<AnalyticsChart>{
   @override
   void initState() {
     super.initState();
-    interval = "Last Week";
+    interval = "Last 7 days";
     cam = "All Cameras";
     print(widget.yText);
+    sendRequest(interval);
   }
 
   @override
@@ -50,6 +56,57 @@ class AnalyticsState extends State<AnalyticsChart>{
       ],
     ),
     );
+  }
+
+  void sendRequest(String type) async{
+    var response;
+    print("sendRequest");
+    try{
+      print("here before if:::");
+      response = await http.post(
+          MyApp.getURL() +'/api/get_user_analytics/',
+          body: {'email': widget.email,'type':type});
+      print(type);
+
+      if (response.statusCode == 200) {
+        Map<String, dynamic> responseBody = json.decode(response.body);
+        print(responseBody.toString());
+        print("Status: "+responseBody['status'].toString());
+        if(responseBody['status']== 200){
+          List<dynamic> labels = responseBody['data'][0];
+          List<dynamic> values = responseBody['data'][1];
+          print("In try");
+          setData(labels, values);
+        }else{
+          Fluttertoast.showToast(
+            msg: 'Something went wrong please check your network connection.',
+            toastLength: Toast.LENGTH_SHORT,
+          );
+        }
+      }
+    }catch(e){
+      Fluttertoast.showToast(
+        msg: 'Something went wrong!',
+        toastLength: Toast.LENGTH_SHORT,
+      );
+      print(e.toString());
+    }
+  }
+
+  void setData(List<dynamic> labels,List<dynamic> values){
+    List<ChartData> newData =[];
+    print("Here");
+    for( int i = 0 ; i < labels.length ; i++ ){
+      ChartData chd = ChartData(
+        x: labels.elementAt(i).toString(),
+        y: values.elementAt(i),
+        barColor: charts.ColorUtil.fromDartColor(Colors.green),
+      );
+      newData.add(chd);
+    }
+    setState(() {
+      widget.data = newData;
+    });
   }
 
   Widget chartControls(){
@@ -82,13 +139,14 @@ class AnalyticsState extends State<AnalyticsChart>{
                 child: DropdownButton<String>(
                   isDense: true,
                   value: interval,
-                items: <String>['Last Week', 'Last Month', 'Custom'].map((String value) {
+                items: <String>['Last 8 hrs', 'Last 7 days', 'Last 6 months'].map((String value) {
                   return new DropdownMenuItem<String>(
                     value: value,
                     child: new Text(value),
                   );
                 }).toList(),
                 onChanged: (String s) {
+                    sendRequest(s);
                   setState(() {
                     interval = s;
                   });

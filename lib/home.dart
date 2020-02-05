@@ -146,6 +146,7 @@ class HomeState extends State<Home> {
             data: data,
             yText: "No. of people",
             viewPortNo: 7,
+            email: profileInfo.email,
           ),
           Spacer(
             flex: 1,

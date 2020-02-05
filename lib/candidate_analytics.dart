@@ -52,7 +52,7 @@ class CandidateState extends State<CandidateAnalytics> {
                 setState(() {
                   candidate = widget.candidateList.elementAt(index);
                 });
-                fetchAnalytics();
+                //fetchAnalytics();
               },
               physics: AlwaysScrollableScrollPhysics(),
               itemBuilder: (BuildContext context, int index) {
@@ -174,6 +174,7 @@ class CandidateState extends State<CandidateAnalytics> {
                 data: data,
                 yText: "Presence Count",
                 viewPortNo: 7,
+                email: candidate.email,
               ),
               Expanded(
                 child: Container(
