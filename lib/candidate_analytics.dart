@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vision/analytics_chart.dart';
 import 'package:vision/candidate_class.dart';
 import 'package:vision/chart_data.dart';
@@ -7,6 +8,8 @@ import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:http/http.dart' as http;
 import 'package:vision/main.dart';
 import 'dart:convert' show json;
+
+import 'package:vision/profileInfo.dart';
 
 class CandidateAnalytics extends StatefulWidget {
   final Candidate candidate;
@@ -21,21 +24,25 @@ class CandidateAnalytics extends StatefulWidget {
 }
 
 class CandidateState extends State<CandidateAnalytics> {
-  List<ChartData> data;
+  List<List<ChartData>> data = [];
   PageController pageController;
   Candidate candidate;
+  ProfileInfo profileInfo;
+  int currentIndex;
 
   @override
   void initState() {
     super.initState();
-    data = [];
     candidate = widget.candidate;
     pageController = PageController(
       initialPage: widget.index,
       viewportFraction: 0.92,
     );
-    fetchAnalytics();
-
+    for(int i=0;i<widget.candidateList.length;i++){
+      data.add([]);
+    }
+    _getPref();
+    currentIndex = widget.index;
   }
 
 
@@ -51,24 +58,43 @@ class CandidateState extends State<CandidateAnalytics> {
               onPageChanged: (int index) {
                 setState(() {
                   candidate = widget.candidateList.elementAt(index);
+                  currentIndex = index;
                 });
                 //fetchAnalytics();
               },
               physics: AlwaysScrollableScrollPhysics(),
               itemBuilder: (BuildContext context, int index) {
-                return buildItem(data);
+                return buildItem(data.elementAt(index));
               })),
 
     ));
   }
 
-  void fetchAnalytics() async{
+  void _getPref() async {
+    final prefs = await SharedPreferences.getInstance();
+    String responseString = prefs.getString('profile_info');
+    if (responseString == null) {
+      logout();
+    }
+    setState(() {
+      profileInfo = ProfileInfo.fromJson(responseString);
+    });
+    fetchAnalytics("Last 7 days");
+  }
+
+  void logout() {
+    Navigator.pop(context);
+    Navigator.pushReplacementNamed(context, '/login');
+  }
+
+  void fetchAnalytics(String type) async{
     var response;
+    print("Called: "+type);
     print("email: "+candidate.email);
     try{
       response = await http.post(
           MyApp.getURL() +'/api/get_user_analytics/',
-          body: {'email': candidate.email});
+          body: {'email': candidate.email,'type':type,'api_key':profileInfo.apiKey,'camera_obj':"none"});
       if (response.statusCode == 200) {
         Map<String, dynamic> responseBody = json.decode(response.body);
         print(responseBody.toString());
@@ -104,7 +130,7 @@ class CandidateState extends State<CandidateAnalytics> {
       newData.add(chd);
     }
     setState(() {
-      data = newData;
+      data[currentIndex] = newData;
     });
   }
 
@@ -175,6 +201,8 @@ class CandidateState extends State<CandidateAnalytics> {
                 yText: "Presence Count",
                 viewPortNo: 7,
                 email: candidate.email,
+                type: "Last 7 days",
+                fetchAnalytics: fetchAnalytics,
               ),
               Expanded(
                 child: Container(

@@ -9,9 +9,10 @@ import 'package:vision/main.dart';
 
 class AnalyticsChart extends StatefulWidget {
   List<ChartData> data;
-  String yText,email;
+  String yText,email,type;
   int viewPortNo;
-  AnalyticsChart({@required this.data,@required this.yText, @required this.viewPortNo, @required this.email});
+  Function fetchAnalytics;
+  AnalyticsChart({@required this.data,@required this.yText, @required this.viewPortNo, @required this.email,@required this.type, this.fetchAnalytics});
 @override
   State<StatefulWidget> createState() {
     return AnalyticsState();
@@ -25,7 +26,7 @@ class AnalyticsState extends State<AnalyticsChart>{
   @override
   void initState() {
     super.initState();
-    interval = "Last 7 days";
+    interval = widget.type;
     cam = "All Cameras";
     print(widget.yText);
     sendRequest(interval);
@@ -146,7 +147,7 @@ class AnalyticsState extends State<AnalyticsChart>{
                   );
                 }).toList(),
                 onChanged: (String s) {
-                    sendRequest(s);
+                    widget.fetchAnalytics(s);
                   setState(() {
                     interval = s;
                   });

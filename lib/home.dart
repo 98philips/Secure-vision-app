@@ -83,7 +83,7 @@ class HomeState extends State<Home> {
     try{
     var response = await http.post(
         MyApp.getURL() +'/api/get_candidates/',
-        body: {'org_id': profileInfo.orgId.toString()});
+        body: {'api_key': profileInfo.apiKey});
         print(response.body);
         if(response.statusCode == 200){
           prepareData(response.body);
@@ -362,6 +362,7 @@ class HomeState extends State<Home> {
       profileInfo = ProfileInfo.fromJson(responseString);
     });
     print("name object: " + profileInfo.username);
+    print(profileInfo.apiKey);
     _getData();
   }
 
