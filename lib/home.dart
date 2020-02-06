@@ -24,44 +24,9 @@ class HomeState extends State<Home> {
   int _selectedIndex;
   List<Candidate> candidateList ;
   List<Candidate> oldCandidateList = [];
+  List<dynamic> cameraList = [];
   bool showSearchButton=false,showSearchBar=false;
-  final List<ChartData> data = [
-    ChartData(
-      x: "Sun",
-      y: 88,
-      barColor: charts.ColorUtil.fromDartColor(Colors.green),
-    ),
-    ChartData(
-      x: "Mon",
-      y: 38,
-      barColor: charts.ColorUtil.fromDartColor(Colors.green),
-    ),
-    ChartData(
-      x: "Tue",
-      y: 45,
-      barColor: charts.ColorUtil.fromDartColor(Colors.green),
-    ),
-    ChartData(
-      x: "Wed",
-      y: 45,
-      barColor: charts.ColorUtil.fromDartColor(Colors.green),
-    ),
-    ChartData(
-      x: "Thu",
-      y: 80,
-      barColor: charts.ColorUtil.fromDartColor(Colors.green),
-    ),
-    ChartData(
-      x: "Fri",
-      y: 120,
-      barColor: charts.ColorUtil.fromDartColor(Colors.green),
-    ),
-    ChartData(
-      x: "Sat",
-      y: 50,
-      barColor: charts.ColorUtil.fromDartColor(Colors.green),
-    ),
-  ];
+  List<ChartData> data = [];
   List<Widget> _widgetOptions;
   String _title;
   List<String> _titleList = ["Overall Analytics", "Candidate Analytics"];
@@ -106,6 +71,10 @@ class HomeState extends State<Home> {
   void prepareData(String responseString){
       Map<String, dynamic> responseBody = json.decode(responseString);
       print(responseBody.toString());
+      setState(() {
+        cameraList = responseBody['camera_list'];
+      });
+      //print("CameraList: "+cameraList[0].toString());
       print("Status: "+responseBody['status'].toString());
       if(responseBody['status']== 200){
         Fluttertoast.showToast(
@@ -137,6 +106,50 @@ class HomeState extends State<Home> {
 
   }
 
+  void fetchAnalytics(String type,String camera) async{
+    var response;
+    try{
+      response = await http.post(
+          MyApp.getURL() +'/api/get_overall_analytics/',
+          body: {'api_key':profileInfo.apiKey,'camera_id':camera,'type': "All",'from_date':'2020-02-01','to_date':'2020-02-06'});
+      if (response.statusCode == 200) {
+        Map<String, dynamic> responseBody = json.decode(response.body);
+        print(responseBody.toString());
+        print("Status: "+responseBody['status'].toString());
+        if(responseBody['status']== 200){
+          List<dynamic> labels = responseBody['time_list'];
+          List<dynamic> values = responseBody['count_list'];
+          setData(labels, values);
+        }else{
+          Fluttertoast.showToast(
+            msg: 'Something went wrong please check your network connection.',
+            toastLength: Toast.LENGTH_SHORT,
+          );
+        }
+      }
+    }catch(e){
+      Fluttertoast.showToast(
+        msg: 'Something went wrong!',
+        toastLength: Toast.LENGTH_SHORT,
+      );
+      print(e.toString());
+    }
+  }
+
+  void setData(List<dynamic> labels,List<dynamic> values){
+    List<ChartData> newData =[];
+    for( int i = 0 ; i < labels.length ; i++ ){
+      ChartData chd = ChartData(
+        x: labels.elementAt(i).toString(),
+        y: values.elementAt(i),
+        barColor: charts.ColorUtil.fromDartColor(Colors.green),
+      );
+      newData.add(chd);
+    }
+    setState(() {
+      data = newData;
+    });
+  }
   @override
   Widget build(BuildContext context) {
     _widgetOptions = <Widget>[
@@ -147,6 +160,8 @@ class HomeState extends State<Home> {
             yText: "No. of people",
             viewPortNo: 7,
             email: profileInfo.email,
+            cameraList: cameraList,
+            fetchAnalytics: fetchAnalytics,
           ),
           Spacer(
             flex: 1,
@@ -266,12 +281,13 @@ class HomeState extends State<Home> {
 
 
   Widget candidateTile(Candidate candidate, BuildContext context, int index) {
+    print("Candidate Tile: "+cameraList.toString());
     return GestureDetector(
       onTap: () => Navigator.push(
           context,
           MaterialPageRoute(
               builder: (context) =>
-                  CandidateAnalytics(candidate, candidateList, index))),
+                  CandidateAnalytics(candidate, candidateList, index, cameraList))),
       child: _listItemTile(candidate),
     );
   }
@@ -363,6 +379,7 @@ class HomeState extends State<Home> {
     });
     print("name object: " + profileInfo.username);
     print(profileInfo.apiKey);
+    fetchAnalytics("Last 7 days", "All Cameras");
     _getData();
   }
 

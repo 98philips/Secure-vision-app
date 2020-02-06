@@ -15,7 +15,8 @@ class CandidateAnalytics extends StatefulWidget {
   final Candidate candidate;
   final List<Candidate> candidateList;
   final int index;
-  CandidateAnalytics(this.candidate, this.candidateList, this.index);
+  final List<dynamic> cameraList;
+  CandidateAnalytics(this.candidate, this.candidateList, this.index, this.cameraList);
 
   @override
   State<StatefulWidget> createState() {
@@ -29,6 +30,8 @@ class CandidateState extends State<CandidateAnalytics> {
   Candidate candidate;
   ProfileInfo profileInfo;
   int currentIndex;
+  AnalyticsChart analyticsChart;
+  List<String> intervals=[],cams=[];
 
   @override
   void initState() {
@@ -40,9 +43,12 @@ class CandidateState extends State<CandidateAnalytics> {
     );
     for(int i=0;i<widget.candidateList.length;i++){
       data.add([]);
+      intervals.add("Last 7 days");
+      cams.add("All Cameras");
     }
     _getPref();
     currentIndex = widget.index;
+    print("Candidates Camera List"+widget.cameraList.toString());
   }
 
 
@@ -60,7 +66,7 @@ class CandidateState extends State<CandidateAnalytics> {
                   candidate = widget.candidateList.elementAt(index);
                   currentIndex = index;
                 });
-                //fetchAnalytics();
+                fetchAnalytics(intervals[index],cams[index]);
               },
               physics: AlwaysScrollableScrollPhysics(),
               itemBuilder: (BuildContext context, int index) {
@@ -79,7 +85,7 @@ class CandidateState extends State<CandidateAnalytics> {
     setState(() {
       profileInfo = ProfileInfo.fromJson(responseString);
     });
-    fetchAnalytics("Last 7 days");
+    fetchAnalytics("Last 7 days","All Cameras");
   }
 
   void logout() {
@@ -87,14 +93,19 @@ class CandidateState extends State<CandidateAnalytics> {
     Navigator.pushReplacementNamed(context, '/login');
   }
 
-  void fetchAnalytics(String type) async{
+  void fetchAnalytics(String type,String camera) async{
     var response;
-    print("Called: "+type);
-    print("email: "+candidate.email);
+//    print("Called: "+type);
+//    print("email: "+candidate.email);
+//    print("Camera: "+camera);
+    intervals[currentIndex] = type;
+    cams[currentIndex] = camera;
+    print("API Key: "+profileInfo.apiKey);
+
     try{
       response = await http.post(
           MyApp.getURL() +'/api/get_user_analytics/',
-          body: {'email': candidate.email,'type':type,'api_key':profileInfo.apiKey,'camera_obj':"none"});
+          body: {'email': candidate.email,'type':type,'api_key':profileInfo.apiKey,'camera_obj':camera});
       if (response.statusCode == 200) {
         Map<String, dynamic> responseBody = json.decode(response.body);
         print(responseBody.toString());
@@ -190,20 +201,21 @@ class CandidateState extends State<CandidateAnalytics> {
   }
 
   Widget buildItem(List<ChartData> data) {
+    analyticsChart = AnalyticsChart(
+      data: data,
+      yText: "Presence Count",
+      viewPortNo: 7,
+      email: candidate.email,
+      fetchAnalytics: fetchAnalytics,
+      cameraList: widget.cameraList,
+    );
     return Card(
         color: Colors.black12,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Container(
             margin: EdgeInsets.all(16),
             child: Column(children: <Widget>[
-              AnalyticsChart(
-                data: data,
-                yText: "Presence Count",
-                viewPortNo: 7,
-                email: candidate.email,
-                type: "Last 7 days",
-                fetchAnalytics: fetchAnalytics,
-              ),
+              analyticsChart,
               Expanded(
                 child: Container(
                   margin: EdgeInsets.only(top: 16),

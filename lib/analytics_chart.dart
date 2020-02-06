@@ -9,31 +9,43 @@ import 'package:vision/main.dart';
 
 class AnalyticsChart extends StatefulWidget {
   List<ChartData> data;
-  String yText,email,type;
+  String yText,email;
   int viewPortNo;
   Function fetchAnalytics;
-  AnalyticsChart({@required this.data,@required this.yText, @required this.viewPortNo, @required this.email,@required this.type, this.fetchAnalytics});
+  List<dynamic> cameraList;
+
+  AnalyticsChart({@required this.data,@required this.yText, @required this.viewPortNo, @required this.email,@required this.fetchAnalytics,@required this.cameraList});
 @override
   State<StatefulWidget> createState() {
     return AnalyticsState();
   }
+
 }
 
 class AnalyticsState extends State<AnalyticsChart>{
   
   String interval,cam;
+  List<String> cameras = [];
 
   @override
   void initState() {
     super.initState();
-    interval = widget.type;
+    interval = "Last 7 days";
     cam = "All Cameras";
     print(widget.yText);
-    sendRequest(interval);
+//    if( widget.fetchAnalytics != null){
+//      widget.fetchAnalytics(interval,cam);
+//      print("Sadhanam ind");
+//    }else{
+//      print("Sadhanam Illa");
+//    }
+    //sendRequest(interval);
   }
 
   @override
   Widget build(BuildContext context) {
+
+
     print(widget.data.length);
     List<charts.Series<ChartData, String>> series = [
       charts.Series(
@@ -111,6 +123,7 @@ class AnalyticsState extends State<AnalyticsChart>{
   }
 
   Widget chartControls(){
+    print("CameraList: "+cameras.toString());
     return Container(
           padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: Column(children:<Widget>[
@@ -122,13 +135,14 @@ class AnalyticsState extends State<AnalyticsChart>{
                 child: DropdownButton<String>(
                   isDense: true,
                   value: cam,
-                items: <String>['All Cameras','Camera 1', 'Camera 2', 'Camera 3'].map((String value) {
+                items: widget.cameraList.map((dynamic value) {
                   return new DropdownMenuItem<String>(
-                    value: value,
+                    value: value.toString(),
                     child: new Text(value),
                   );
                 }).toList(),
                 onChanged: (String s) {
+                  widget.fetchAnalytics(interval,s);
                   setState(() {
                     cam = s;
                   });
@@ -147,7 +161,7 @@ class AnalyticsState extends State<AnalyticsChart>{
                   );
                 }).toList(),
                 onChanged: (String s) {
-                    widget.fetchAnalytics(s);
+                    widget.fetchAnalytics(s,cam);
                   setState(() {
                     interval = s;
                   });
@@ -189,4 +203,10 @@ class AnalyticsState extends State<AnalyticsChart>{
         ),
     );
   }
+
+  void getData(){
+    widget.fetchAnalytics(interval,cam);
+  }
+
+
 }
