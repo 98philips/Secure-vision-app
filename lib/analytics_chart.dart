@@ -9,12 +9,13 @@ import 'package:vision/main.dart';
 
 class AnalyticsChart extends StatefulWidget {
   List<ChartData> data;
-  String yText,email;
+  String yText,email,content;
   int viewPortNo;
   Function fetchAnalytics;
   List<dynamic> cameraList;
+  BuildContext context;
 
-  AnalyticsChart({@required this.data,@required this.yText, @required this.viewPortNo, @required this.email,@required this.fetchAnalytics,@required this.cameraList});
+  AnalyticsChart({@required this.data,@required this.yText, @required this.viewPortNo, @required this.email,@required this.fetchAnalytics,@required this.cameraList, @required this.content, this.context});
 @override
   State<StatefulWidget> createState() {
     return AnalyticsState();
@@ -24,7 +25,7 @@ class AnalyticsChart extends StatefulWidget {
 
 class AnalyticsState extends State<AnalyticsChart>{
   
-  String interval,cam;
+  String interval,cam,fromDate,toDate;
   List<String> cameras = [];
 
   @override
@@ -32,14 +33,9 @@ class AnalyticsState extends State<AnalyticsChart>{
     super.initState();
     interval = "Last 7 days";
     cam = "All Cameras";
+    fromDate = DateTime.now().subtract(Duration(days: 7)).toString().substring(0,10);
+    toDate  = DateTime.now().toString().substring(0,10);
     print(widget.yText);
-//    if( widget.fetchAnalytics != null){
-//      widget.fetchAnalytics(interval,cam);
-//      print("Sadhanam ind");
-//    }else{
-//      print("Sadhanam Illa");
-//    }
-    //sendRequest(interval);
   }
 
   @override
@@ -70,57 +66,7 @@ class AnalyticsState extends State<AnalyticsChart>{
     ),
     );
   }
-
-  void sendRequest(String type) async{
-    var response;
-    print("sendRequest");
-    try{
-      print("here before if:::");
-      response = await http.post(
-          MyApp.getURL() +'/api/get_user_analytics/',
-          body: {'email': widget.email,'type':type});
-      print(type);
-
-      if (response.statusCode == 200) {
-        Map<String, dynamic> responseBody = json.decode(response.body);
-        print(responseBody.toString());
-        print("Status: "+responseBody['status'].toString());
-        if(responseBody['status']== 200){
-          List<dynamic> labels = responseBody['data'][0];
-          List<dynamic> values = responseBody['data'][1];
-          print("In try");
-          setData(labels, values);
-        }else{
-          Fluttertoast.showToast(
-            msg: 'Something went wrong please check your network connection.',
-            toastLength: Toast.LENGTH_SHORT,
-          );
-        }
-      }
-    }catch(e){
-      Fluttertoast.showToast(
-        msg: 'Something went wrong!',
-        toastLength: Toast.LENGTH_SHORT,
-      );
-      print(e.toString());
-    }
-  }
-
-  void setData(List<dynamic> labels,List<dynamic> values){
-    List<ChartData> newData =[];
-    print("Here");
-    for( int i = 0 ; i < labels.length ; i++ ){
-      ChartData chd = ChartData(
-        x: labels.elementAt(i).toString(),
-        y: values.elementAt(i),
-        barColor: charts.ColorUtil.fromDartColor(Colors.green),
-      );
-      newData.add(chd);
-    }
-    setState(() {
-      widget.data = newData;
-    });
-  }
+  
 
   Widget chartControls(){
     print("CameraList: "+cameras.toString());
@@ -130,6 +76,7 @@ class AnalyticsState extends State<AnalyticsChart>{
             Row(
             children: <Widget>[
               Expanded(
+                flex: 1,
                 child:Container(
                   margin: EdgeInsets.all(4),
                 child: DropdownButton<String>(
@@ -142,35 +89,106 @@ class AnalyticsState extends State<AnalyticsChart>{
                   );
                 }).toList(),
                 onChanged: (String s) {
-                  widget.fetchAnalytics(interval,s);
+                    if(widget.content == "user") {
+                      widget.fetchAnalytics(interval, s);
+                    }else{
+                      widget.fetchAnalytics(s,fromDate,toDate);
+                    }
                   setState(() {
                     cam = s;
                   });
                 },
               ),),),
-              Expanded(
-                child:Container(
-                  margin: EdgeInsets.all(4),
-                child: DropdownButton<String>(
-                  isDense: true,
-                  value: interval,
-                items: <String>['Last 8 hrs', 'Last 7 days', 'Last 6 months'].map((String value) {
-                  return new DropdownMenuItem<String>(
-                    value: value,
-                    child: new Text(value),
-                  );
-                }).toList(),
-                onChanged: (String s) {
-                    widget.fetchAnalytics(s,cam);
-                  setState(() {
-                    interval = s;
-                  });
-                },
-              ),),)
+              chooseControl(),
             ],
           ),
           ]),
         );
+  }
+
+  Widget chooseControl(){
+    if(widget.content == "user"){
+      return Expanded(
+        flex: 1,
+        child:Container(
+          margin: EdgeInsets.all(4),
+          child: DropdownButton<String>(
+            isDense: true,
+            value: interval,
+            items: <String>['Last 8 hrs', 'Last 7 days', 'Last 6 months'].map((String value) {
+              return new DropdownMenuItem<String>(
+                value: value,
+                child: new Text(value),
+              );
+            }).toList(),
+            onChanged: (String s) {
+              widget.fetchAnalytics(s,cam);
+              setState(() {
+                interval = s;
+              });
+            },
+          ),),);
+    }
+    return Expanded(
+      flex: 2,
+      child:Container(
+        margin: EdgeInsets.all(4),
+        child: Row(
+          children: <Widget>[
+            Expanded(
+            child: Card(
+              child: Container(
+                padding :EdgeInsets.all(4),
+                child: GestureDetector(
+                  onTap: (){
+                    datePicker("From: ");
+                  },
+                  child: Text("From: "+fromDate),
+                ),
+              ),
+            ),),
+            Expanded(
+            child: Card(
+              child: Container(
+                padding :EdgeInsets.all(4),
+                child: GestureDetector(
+                  onTap: (){
+                    datePicker("To: ");
+                  },
+                  child: Text("To: "+toDate),
+                ),
+              ),
+            ),),
+          ],
+        )
+
+      ),);
+  }
+
+  void datePicker(String type) async{
+    DateTime selectedDate = await showDatePicker(
+      context: widget.context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2019),
+      lastDate: DateTime.now(),
+      builder: (BuildContext context, Widget child) {
+        return Theme(
+          data: ThemeData.dark(),
+          child: child,
+        );
+      },
+    );
+    if(selectedDate != null) {
+      setState(() {
+        if (type == "From: ") {
+          fromDate = selectedDate.toString().substring(0,10);
+        } else {
+          toDate = selectedDate.toString().substring(0,10);
+        }
+      });
+      widget.fetchAnalytics(cam,fromDate,toDate);
+    }
+    print("Date: "+selectedDate.toString());
   }
 
   Widget chart(List<charts.Series<ChartData, String>> series){

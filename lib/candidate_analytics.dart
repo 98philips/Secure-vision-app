@@ -208,6 +208,7 @@ class CandidateState extends State<CandidateAnalytics> {
       email: candidate.email,
       fetchAnalytics: fetchAnalytics,
       cameraList: widget.cameraList,
+      content: "user",
     );
     return Card(
         color: Colors.black12,

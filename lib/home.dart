@@ -106,12 +106,12 @@ class HomeState extends State<Home> {
 
   }
 
-  void fetchAnalytics(String type,String camera) async{
+  void fetchAnalytics(String camera, String fromDate, String toDate) async{
     var response;
     try{
       response = await http.post(
           MyApp.getURL() +'/api/get_overall_analytics/',
-          body: {'api_key':profileInfo.apiKey,'camera_id':camera,'type': "All",'from_date':'2020-02-01','to_date':'2020-02-06'});
+          body: {'api_key':profileInfo.apiKey,'camera_id':camera,'type': "All",'from_date':fromDate,'to_date':toDate});
       if (response.statusCode == 200) {
         Map<String, dynamic> responseBody = json.decode(response.body);
         print(responseBody.toString());
@@ -162,6 +162,8 @@ class HomeState extends State<Home> {
             email: profileInfo.email,
             cameraList: cameraList,
             fetchAnalytics: fetchAnalytics,
+            content: "overall",
+            context: context,
           ),
           Spacer(
             flex: 1,
@@ -379,7 +381,9 @@ class HomeState extends State<Home> {
     });
     print("name object: " + profileInfo.username);
     print(profileInfo.apiKey);
-    fetchAnalytics("Last 7 days", "All Cameras");
+    String fromDate = DateTime.now().subtract(Duration(days: 7)).toString().substring(0,10);
+    String toDate  = DateTime.now().toString().substring(0,10);
+    fetchAnalytics("All Cameras",fromDate,toDate);
     _getData();
   }
 
