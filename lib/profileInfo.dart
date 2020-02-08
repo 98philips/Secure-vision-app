@@ -1,12 +1,12 @@
 import 'dart:convert'show json;
 
 class ProfileInfo {
-  final String username;
-  final String email;
-  final String name;
-  final String imageUrl,phNo;
-  final int orgId;
-  final String apiKey;
+  String username;
+  String email;
+  String name;
+  String imageUrl,phNo;
+  int orgId;
+  String apiKey;
 
   ProfileInfo({this.username, this.email, this.name, this.imageUrl,this.orgId,this.phNo,this.apiKey});
 

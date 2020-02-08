@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vision/main.dart';
 import 'package:vision/profileInfo.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'dart:convert' show json;
+import 'package:path/path.dart';
+import 'package:async/async.dart';
+
 
 class ProfileSheet extends StatefulWidget {
   ProfileInfo profileInfo;
-
-  ProfileSheet({this.profileInfo});
+  BuildContext buildContext;
+  ProfileSheet({this.profileInfo,this.buildContext});
 
   @override
   State<StatefulWidget> createState() {
@@ -19,6 +25,15 @@ class ProfileSheet extends StatefulWidget {
 class ProfileSheetState extends State<ProfileSheet> {
   bool editMode = false;
   Future<File> imageFile;
+  String mobileNumber,name;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    mobileNumber = widget.profileInfo.phNo;
+    name = widget.profileInfo.name;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +73,22 @@ class ProfileSheetState extends State<ProfileSheet> {
     );
   }
 
+  void uploadImage(File imageFile) async {
+    var stream = new http.ByteStream(DelegatingStream.typed(imageFile.openRead()));
+    var length = await imageFile.length();
+
+    var uri = Uri.parse(MyApp.getURL()+"/edit_profile_picture/");
+
+    var request = new http.MultipartRequest("POST", uri);
+    var multipartFile = new http.MultipartFile('file', stream, length,
+        filename: basename(imageFile.path));
+    //contentType: new MediaType('image', 'png'));
+
+    request.files.add(multipartFile);
+    var response = await request.send();
+    print(response);
+  }
+
   void imageDialog() {
     Dialog imageDialog = Dialog(
       shape: RoundedRectangleBorder(
@@ -75,7 +106,7 @@ class ProfileSheetState extends State<ProfileSheet> {
               children:<Widget>[
               FlatButton(
                 onPressed: () {
-                  Navigator.of(context).pop();
+                  Navigator.of(widget.buildContext).pop();
                 },
                 child: Text(
                   'CANCEL',
@@ -86,7 +117,8 @@ class ProfileSheetState extends State<ProfileSheet> {
                 ),
                 RaisedButton(
                 onPressed: () {
-                  Navigator.of(context).pop();
+                  //uploadImage();
+                  Navigator.of(widget.buildContext).pop();
                 },
                 child: Text(
                   'SAVE',
@@ -98,7 +130,7 @@ class ProfileSheetState extends State<ProfileSheet> {
       ),]),
     );
     showDialog(
-        context: context, builder: (BuildContext context) => imageDialog);
+        context: widget.buildContext, builder: (BuildContext context) => imageDialog);
   }
 
   Widget _editProfile() {
@@ -155,6 +187,9 @@ class ProfileSheetState extends State<ProfileSheet> {
           Container(
             margin: EdgeInsets.only(bottom: 16),
             child: TextFormField(
+              onChanged: (String text){
+                name = text;
+              },
               initialValue: widget.profileInfo.name,
               decoration: InputDecoration(
                   labelText: "Name",
@@ -166,7 +201,10 @@ class ProfileSheetState extends State<ProfileSheet> {
           Container(
             margin: EdgeInsets.only(bottom: 16),
             child: TextFormField(
-              initialValue: widget.profileInfo.phNo,
+              onChanged: (String text){
+                mobileNumber = text;
+              },
+              initialValue: mobileNumber,
               decoration: InputDecoration(
                   labelText: "Moble Number",
                   border: OutlineInputBorder(
@@ -197,9 +235,7 @@ class ProfileSheetState extends State<ProfileSheet> {
                   RaisedButton(
                     child: Text('DONE'),
                     onPressed: () {
-                      setState(() {
-                        editMode = false;
-                      });
+                      update();
                     },
                   ),
                 ],
@@ -208,6 +244,63 @@ class ProfileSheetState extends State<ProfileSheet> {
         ],
       ),
     );
+  }
+
+  void update() async{
+    var response;
+    String firstName = "",lastName = "";
+    List<String> names = name.split(" ");
+    firstName = names[0];
+    if(names.length>1){
+      lastName = names.sublist(1).join(" ");
+    }
+    try{
+      response = await http.post(
+          MyApp.getURL() +'/api/edit_profile/',
+          body: {'username': widget.profileInfo.username, 'phone':mobileNumber, 'first_name':firstName,'last_name':lastName});
+    }catch(e){
+      Fluttertoast.showToast(
+        msg: 'Something went wrong!',
+        toastLength: Toast.LENGTH_SHORT,
+      );
+      print(e.toString());
+    }
+    if (response.statusCode == 200) {
+      Map<String, dynamic> responseBody = json.decode(response.body);
+      print(responseBody.toString());
+      print("Status: "+responseBody['status'].toString());
+      if(responseBody['status']== 200){
+        Fluttertoast.showToast(
+          msg: 'Profile Successfully Updated',
+          toastLength: Toast.LENGTH_SHORT,
+        );
+        setState(() {
+          widget.profileInfo.name = name;
+          widget.profileInfo.phNo = mobileNumber;
+          editMode = false;
+        });
+        String profile = json.encode(widget.profileInfo);
+        final prefs = await SharedPreferences.getInstance();
+
+        prefs.setString('profile_info', profile);
+        widget.profileInfo = ProfileInfo.fromJson(responseBody['data']);
+      }else{
+        Fluttertoast.showToast(
+          msg: 'Something Went Wrong!',
+          toastLength: Toast.LENGTH_SHORT,
+        );
+      }
+      // If server returns an OK response, parse the JSON.
+
+    } else {
+      Fluttertoast.showToast(
+        msg: 'Please check your internet connection',
+        toastLength: Toast.LENGTH_SHORT,
+      );
+      // If that response was not OK, throw an error.
+      print("error");
+      // throw Exception('Failed to load post');
+    }
   }
 
   Widget _profile() {
@@ -292,7 +385,7 @@ class ProfileSheetState extends State<ProfileSheet> {
   }
 
   void logout() {
-    Navigator.pop(context);
-    Navigator.pushReplacementNamed(context, '/login');
+    Navigator.pop(widget.buildContext);
+    Navigator.pushReplacementNamed(widget.buildContext, '/login');
   }
 }
