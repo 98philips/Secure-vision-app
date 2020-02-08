@@ -29,7 +29,9 @@ class ProfileSheetState extends State<ProfileSheet> {
     setState(() {
       imageFile = ImagePicker.pickImage(source: source);
     });
-    imageDialog();
+    if (imageFile != null) {
+      imageDialog();
+    }
   }
 
   Widget showImage() {

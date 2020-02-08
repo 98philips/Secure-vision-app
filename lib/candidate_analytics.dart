@@ -32,6 +32,8 @@ class CandidateState extends State<CandidateAnalytics> {
   int currentIndex;
   AnalyticsChart analyticsChart;
   List<String> intervals=[],cams=[];
+  List<List<String>> timestamps=[],cameraIds=[];
+  List<int> rawDataCount=[];
 
   @override
   void initState() {
@@ -43,6 +45,9 @@ class CandidateState extends State<CandidateAnalytics> {
     );
     for(int i=0;i<widget.candidateList.length;i++){
       data.add([]);
+      rawDataCount.add(0);
+      timestamps.add([]);
+      cameraIds.add([]);
       intervals.add("Last 7 days");
       cams.add("All Cameras");
     }
@@ -95,12 +100,8 @@ class CandidateState extends State<CandidateAnalytics> {
 
   void fetchAnalytics(String type,String camera) async{
     var response;
-//    print("Called: "+type);
-//    print("email: "+candidate.email);
-//    print("Camera: "+camera);
     intervals[currentIndex] = type;
     cams[currentIndex] = camera;
-    print("API Key: "+profileInfo.apiKey);
 
     try{
       response = await http.post(
@@ -120,6 +121,22 @@ class CandidateState extends State<CandidateAnalytics> {
             toastLength: Toast.LENGTH_SHORT,
           );
         }
+        List<dynamic> rawData = responseBody['raw_data'];
+        List<String> time=[],camera=[];
+        for(dynamic i in rawData){
+          time.add(i['time_stamp'].toString());
+          camera.add(i['camera_name'].toString());
+        }
+        setState(() {
+          rawDataCount[currentIndex] = rawData.length;
+          try {
+            timestamps[currentIndex] = time;
+            cameraIds[currentIndex] = camera;
+          }catch(e){
+            timestamps.add(time);
+            cameraIds.add(camera);
+          }
+        });
       }
     }catch(e){
       Fluttertoast.showToast(
@@ -224,9 +241,9 @@ class CandidateState extends State<CandidateAnalytics> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   child: ListView.builder(
                     scrollDirection: Axis.vertical,
-                    itemCount: 15,
+                    itemCount: rawDataCount[currentIndex],
                     itemBuilder: (BuildContext context, int index) {
-                      return _listItemTile();
+                      return _listItemTile(index);
                     },
                   ),
                 ),
@@ -235,7 +252,7 @@ class CandidateState extends State<CandidateAnalytics> {
             ])));
   }
 
-  Widget _listItemTile() {
+  Widget _listItemTile(int index) {
     return Container(
       padding: EdgeInsets.all(8),
       margin: EdgeInsets.all(8),
@@ -247,14 +264,14 @@ class CandidateState extends State<CandidateAnalytics> {
       ))),
       child: Row(
         children: <Widget>[
-          Container(
-            child: Text(
-              "Friday",
-            ),
+          Text(
+            timestamps.elementAt(currentIndex).elementAt(index),
           ),
           Spacer(),
-          Text(
-            "13:15",
+          Container(
+            child: Text(
+              cameraIds.elementAt(currentIndex).elementAt(index),
+            ),
           ),
         ],
       ),
