@@ -31,7 +31,7 @@ class HomeState extends State<Home> {
   String _title;
   List<String> _titleList = ["Overall Analytics", "Candidate Analytics"];
   ProfileInfo profileInfo;
-
+  BuildContext buildContext;
   @override
   void initState() {
     super.initState();
@@ -136,6 +136,13 @@ class HomeState extends State<Home> {
     }
   }
 
+  void changePic(String url){
+    setState(() {
+      profileInfo.imageUrl = url;
+    });
+
+  }
+
   void setData(List<dynamic> labels,List<dynamic> values){
     List<ChartData> newData =[];
     for( int i = 0 ; i < labels.length ; i++ ){
@@ -152,6 +159,7 @@ class HomeState extends State<Home> {
   }
   @override
   Widget build(BuildContext context) {
+    buildContext = context;
     _widgetOptions = <Widget>[
       Column(
         children: <Widget>[
@@ -399,7 +407,7 @@ class HomeState extends State<Home> {
         ),
         context: context,
         builder: (BuildContext bc) {
-          return SafeArea(child: ProfileSheet(profileInfo: profileInfo));
+          return SafeArea(child: ProfileSheet(profileInfo: profileInfo,buildContext: buildContext,changePic: changePic));
         });
   }
 

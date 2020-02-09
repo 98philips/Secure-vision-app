@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:http/http.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vision/main.dart';
 import 'package:vision/profileInfo.dart';
@@ -14,7 +15,8 @@ import 'package:async/async.dart';
 class ProfileSheet extends StatefulWidget {
   ProfileInfo profileInfo;
   BuildContext buildContext;
-  ProfileSheet({this.profileInfo,this.buildContext});
+  Function changePic;
+  ProfileSheet({this.profileInfo,this.buildContext,this.changePic});
 
   @override
   State<StatefulWidget> createState() {
@@ -25,6 +27,7 @@ class ProfileSheet extends StatefulWidget {
 class ProfileSheetState extends State<ProfileSheet> {
   bool editMode = false;
   Future<File> imageFile;
+  File image;
   String mobileNumber,name;
 
   @override
@@ -43,6 +46,7 @@ class ProfileSheetState extends State<ProfileSheet> {
   pickImageFromGallery(ImageSource source) {
     setState(() {
       imageFile = ImagePicker.pickImage(source: source);
+
     });
     if (imageFile != null) {
       imageDialog();
@@ -74,10 +78,11 @@ class ProfileSheetState extends State<ProfileSheet> {
   }
 
   void uploadImage(File imageFile) async {
+    print(imageFile.path);
     var stream = new http.ByteStream(DelegatingStream.typed(imageFile.openRead()));
     var length = await imageFile.length();
 
-    var uri = Uri.parse(MyApp.getURL()+"/edit_profile_picture/");
+    var uri = Uri.parse(MyApp.getURL()+"/api/edit_profile_picture/?username="+widget.profileInfo.username);
 
     var request = new http.MultipartRequest("POST", uri);
     var multipartFile = new http.MultipartFile('file', stream, length,
@@ -86,7 +91,14 @@ class ProfileSheetState extends State<ProfileSheet> {
 
     request.files.add(multipartFile);
     var response = await request.send();
-    print(response);
+    var responseObj = await Response.fromStream(response);
+    Map<String, dynamic> responseBody = json.decode(responseObj.body);
+    setState(() {
+      widget.profileInfo.imageUrl = responseBody['image_url'];
+    });
+    widget.changePic(responseBody['image_url']);
+    saveProfile();
+    print("Profile_pic: "+responseObj.body);
   }
 
   void imageDialog() {
@@ -117,7 +129,10 @@ class ProfileSheetState extends State<ProfileSheet> {
                 ),
                 RaisedButton(
                 onPressed: () {
-                  //uploadImage();
+                    imageFile.then((imageLoaded){
+                      image = imageLoaded;
+                      uploadImage(image);
+                    });
                   Navigator.of(widget.buildContext).pop();
                 },
                 child: Text(
@@ -246,6 +261,14 @@ class ProfileSheetState extends State<ProfileSheet> {
     );
   }
 
+  saveProfile() async{
+    String profile = json.encode(ProfileInfo.toJson(widget.profileInfo));
+
+    final prefs = await SharedPreferences.getInstance();
+
+    prefs.setString('profile_info', profile);
+  }
+
   void update() async{
     var response;
     String firstName = "",lastName = "";
@@ -279,11 +302,7 @@ class ProfileSheetState extends State<ProfileSheet> {
           widget.profileInfo.phNo = mobileNumber;
           editMode = false;
         });
-        String profile = json.encode(widget.profileInfo);
-        final prefs = await SharedPreferences.getInstance();
-
-        prefs.setString('profile_info', profile);
-        widget.profileInfo = ProfileInfo.fromJson(responseBody['data']);
+        saveProfile();
       }else{
         Fluttertoast.showToast(
           msg: 'Something Went Wrong!',
