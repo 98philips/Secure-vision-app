@@ -7,6 +7,7 @@ import 'package:vision/candidate_class.dart';
 import 'package:vision/chart_data.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:vision/main.dart';
+import 'package:vision/overall_candidate.dart';
 import 'package:vision/profileInfo.dart';
 import 'package:vision/profile_sheet.dart';
 import 'package:http/http.dart' as http;
@@ -22,8 +23,9 @@ class Home extends StatefulWidget {
 
 class HomeState extends State<Home> {
   int _selectedIndex;
-  List<Candidate> candidateList ;
+  List<Candidate> candidateList;
   List<Candidate> oldCandidateList = [];
+  List<OverallCandidate> overallCandidateList;
   List<dynamic> cameraList = [];
   bool showSearchButton=false,showSearchBar=false;
   List<ChartData> data = [];
@@ -40,6 +42,7 @@ class HomeState extends State<Home> {
     showSearchBar = false;
     showSearchButton = false;
     candidateList = [];
+    overallCandidateList = [];
     _getPref();
   }
 
@@ -86,6 +89,7 @@ class HomeState extends State<Home> {
           setState(() {
             candidateList.add(Candidate.fromJson(i));
           });
+          print("hhhhh:   "+responseBody['data'].toString());
 
         }
         oldCandidateList = candidateList;
@@ -120,6 +124,16 @@ class HomeState extends State<Home> {
           List<dynamic> labels = responseBody['time_list'];
           List<dynamic> values = responseBody['count_list'];
           setData(labels, values);
+          List<dynamic> dataList = responseBody['data'];
+          List<OverallCandidate> oc = [];
+          for(dynamic i in dataList){
+
+              oc.add(OverallCandidate.fromJson(i));
+          }
+          setState(() {
+            overallCandidateList = oc;
+          });
+          print("DATA: "+responseBody['data'][0]['email'].toString());
         }else{
           Fluttertoast.showToast(
             msg: 'Something went wrong please check your network connection.',
@@ -135,6 +149,7 @@ class HomeState extends State<Home> {
       print(e.toString());
     }
   }
+
 
   void changePic(String url){
     setState(() {
@@ -173,9 +188,15 @@ class HomeState extends State<Home> {
             content: "overall",
             context: context,
           ),
-          Spacer(
-            flex: 1,
-          )
+        SizedBox(
+          height: 200,
+          child:ListView.builder(
+            scrollDirection: Axis.vertical,
+            itemCount: overallCandidateList.length,
+            itemBuilder: (BuildContext context, int index) {
+              return _overallListItemTile(overallCandidateList.elementAt(index));
+            },
+          ),),
         ],
       ),
           ListView.builder(
@@ -367,6 +388,72 @@ class HomeState extends State<Home> {
                   ),
                 ),
               ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _overallListItemTile(OverallCandidate candidate) {
+    print("IN: "+candidate.email);
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.0),
+      ),
+      child: Container(
+        padding: EdgeInsets.all(8),
+        child: Row(
+          children: <Widget>[
+            Container(
+              width: 50.0,
+              height: 50.0,
+              decoration: BoxDecoration(
+                color: Colors.green,
+                image: DecorationImage(
+                  image: new NetworkImage(MyApp.getURL()+candidate.imageUrl),
+                  fit: BoxFit.cover,
+                ),
+                borderRadius: new BorderRadius.all(new Radius.circular(50.0)),
+                border: new Border.all(
+                  color: Colors.greenAccent,
+                  width: 1.0,
+                ),
+              ),
+            ),
+            Expanded(
+              child: Container(
+                padding: EdgeInsets.only(left: 16),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      SingleChildScrollView(
+                        child: Container(
+                          padding: EdgeInsets.only(bottom: 4),
+                          child: Text(
+                            candidate.name,
+                          ),
+                        ),
+                      ),
+                      SingleChildScrollView(
+                        child: Text(
+                          candidate.email,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Text(
+              candidate.count,
+              style: TextStyle(
+                fontSize: 25,
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.only(left: 16),
             )
           ],
         ),

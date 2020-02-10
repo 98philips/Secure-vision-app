@@ -1,4 +1,4 @@
-import 'dart:convert' show json;
+
 
 class Candidate{
   String imageUrl,name,email;
