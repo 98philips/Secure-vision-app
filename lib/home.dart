@@ -258,7 +258,11 @@ class HomeState extends State<Home> {
           setState(() {
             _selectedIndex = index;
             _title = _titleList.elementAt(_selectedIndex);
-            showSearchButton = !showSearchButton;
+            if( _selectedIndex == 1) {
+              showSearchButton = true;
+            }else{
+              showSearchButton = false;
+            }
             if(index == 0){
               showSearchBar = false;
             }

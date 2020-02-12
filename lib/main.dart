@@ -6,7 +6,7 @@ import 'package:vision/login.dart';
 void main() => runApp(MyApp());
 
 class MyApp extends StatefulWidget {
-  static String url = "http://192.168.43.183:8000";
+  static String url = "http://vision.sreeraj.codes";
   @override
   State<StatefulWidget> createState() {
     return MyAppState();
