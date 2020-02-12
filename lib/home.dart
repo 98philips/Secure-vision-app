@@ -188,8 +188,7 @@ class HomeState extends State<Home> {
             content: "overall",
             context: context,
           ),
-        SizedBox(
-          height: 200,
+        Expanded(
           child:ListView.builder(
             scrollDirection: Axis.vertical,
             itemCount: overallCandidateList.length,
